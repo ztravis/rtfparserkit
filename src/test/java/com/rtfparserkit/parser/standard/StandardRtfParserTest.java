@@ -154,4 +154,35 @@ public class StandardRtfParserTest
    {
       TestUtilities.assertRtfParserDumpMatches(this, new StandardRtfParser(), "testNecCharacters");
    }
+
+   @Test
+   public void testSkipGroupStart() throws Exception
+   {
+      TestUtilities.assertRtfParserDumpMatches(this, new StandardRtfParser(), "testSkipGroupStart");
+   }
+
+   @Test
+   public void testSkipGroupEnd() throws Exception
+   {
+      TestUtilities.assertRtfParserDumpMatches(this, new StandardRtfParser(), "testSkipGroupEnd");
+   }
+
+   @Test
+   public void testSkipBinary() throws Exception
+   {
+      TestUtilities.assertRtfParserDumpMatches(this, new StandardRtfParser(), "testSkipBinary");
+   }
+
+   @Test
+   public void testSkipCommand() throws Exception
+   {
+      TestUtilities.assertRtfParserDumpMatches(this, new StandardRtfParser(), "testSkipCommand");
+   }
+
+   @Test
+   public void testSkipCombo() throws Exception
+   {
+      TestUtilities.assertRtfParserDumpMatches(this, new StandardRtfParser(), "testSkipCombo");
+   }
+
 }

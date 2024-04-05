@@ -59,6 +59,8 @@ public class StandardRtfParser implements IRtfParser, IRtfListener
       handleEvent(GROUP_START);
       stack.push(state);
       state = new ParserState(state);
+      // Clear any remaining skippable bytes on group start.
+      skipBytes = 0;
    }
 
    /**
@@ -69,6 +71,8 @@ public class StandardRtfParser implements IRtfParser, IRtfListener
    {
       handleEvent(GROUP_END);
       state = stack.pop();
+      // Clear any remaining skippable bytes on group end.
+      skipBytes = 0;
    }
 
    /**
@@ -77,21 +81,21 @@ public class StandardRtfParser implements IRtfParser, IRtfListener
    @Override
    public void processCharacterBytes(byte[] data)
    {
-      try
+      if (skipBytes < data.length)
       {
-         if (data.length != 0)
+         try
          {
-            if (skipBytes < data.length)
-            {
-               handleEvent(new StringEvent(new String(data, skipBytes, data.length - skipBytes, currentEncoding())));
-            }
-            skipBytes = 0;
+            handleEvent(new StringEvent(new String(data, skipBytes, data.length - skipBytes, currentEncoding())));
          }
+         catch (UnsupportedEncodingException ex)
+         {
+            throw new RuntimeException(ex);
+         }
+         skipBytes = 0;
       }
-
-      catch (UnsupportedEncodingException ex)
+      else
       {
-         throw new RuntimeException(ex);
+         skipBytes -= data.length;
       }
    }
 
@@ -133,6 +137,11 @@ public class StandardRtfParser implements IRtfParser, IRtfListener
    @Override
    public void processBinaryBytes(byte[] data)
    {
+      if (skipBytes > 0) {
+         // Treat all binary data as a single skippable character.
+         skipBytes--;
+         return;
+      }
       handleEvent(new BinaryBytesEvent(data));
    }
 
@@ -151,6 +160,11 @@ public class StandardRtfParser implements IRtfParser, IRtfListener
    @Override
    public void processCommand(Command command, int parameter, boolean hasParameter, boolean optional)
    {
+      if (skipBytes > 0) {
+         // A command should be treated as a single skippable character (and skipped).
+         skipBytes--;
+         return;
+      }
       if (command.getCommandType() == CommandType.Encoding)
       {
          processEncoding(command, hasParameter, parameter);
